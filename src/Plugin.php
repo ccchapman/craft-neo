@@ -39,6 +39,7 @@ use craft\gatsbyhelper\events\RegisterIgnoredTypesEvent;
 use craft\gatsbyhelper\services\Deltas;
 use craft\helpers\Console;
 use craft\helpers\Db;
+use craft\helpers\FileHelper;
 use craft\models\FieldLayout;
 use craft\services\Fields;
 use craft\services\Gc;
@@ -225,8 +226,9 @@ class Plugin extends BasePlugin
 
             // Delete anything in the structures table that's a Neo block structure, but doesn't exist in the
             // neoblockstructures table
-            $stdout('    > deleting orphaned Neo block structure data ... ');
-            Db::delete(Table::STRUCTURES, [
+            $stdout('    > putting orphaned Neo block structure data query to @storage/neo-block-orphaned-structure.sql ... ');
+
+            FileHelper::writeToFile(Craft::getAlias("@storage/neo-block-orphaned-structure.sql"), Craft::$app->db->createCommand()->delete(Table::STRUCTURES, [
                 'and',
                 [
                     'id' => (new Query())
@@ -244,7 +246,8 @@ class Plugin extends BasePlugin
                             ->column(),
                     ],
                 ],
-            ]);
+            ])->getRawSql());
+
             $stdout("done\n", Console::FG_GREEN);
         });
     }
